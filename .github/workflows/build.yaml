@@ -1,0 +1,33 @@
+name: Build Executable
+
+on:
+  push:
+    branchs: [ dev ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install independencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install -r requirements.txt
+
+    - name: Build Executable
+      run: pyinstaller --onefile AutoUpdateResource.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Executable
+        path: dist/AutoUpdateResource.exe

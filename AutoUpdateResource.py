@@ -9,6 +9,7 @@ from pathlib import Path
 from datetime import datetime
 from urllib.parse import urljoin
 from colorama import Fore, Style, init
+from dotenv import load_dotenv
 
 # 配置信息
 REMOTE_BASE = "https://github.com/MaaAssistantArknights/MaaAssistantArknights/raw/dev/resource/"
@@ -16,12 +17,7 @@ GITHUB_REPO_API = "https://api.github.com/repos/MaaAssistantArknights/MaaAssista
 LOCAL_RESOURCE = Path("resource")
 VERSION_FILE = LOCAL_RESOURCE / "version.json"
 MANIFEST_FILE = LOCAL_RESOURCE / ".manifest.json"
-GITHUB_TOKEN = "your_token_here"
-
-headers = {
-    "Authorization": f"token {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.v3+json"
-}
+# GITHUB_TOKEN = "your_token_here"
 
 # 计时器
 class Timer:
@@ -55,7 +51,42 @@ def log(message: str, level: str = "info") -> None:
     else:
         print(f"{Fore.GREEN}[{level}]{Style.RESET_ALL} {message}")
 
-def get_remote_files_recursive(path="resource"):
+def validate_github_token(token):
+    # 验证 token 是否有效
+    
+    if not token:
+        log("没有有效token", "warn")
+        return False
+        
+    headers = {
+        'Authorization': f'token {token}',
+        'User-Agent': 'GitHubAPIHelper/1.0'
+    }
+    
+    try:
+        respose = requests.get(
+            'http://api.github.com/user',
+            headers=headers,
+            timeout=5
+        )
+
+        if respose.status_code == 200:
+            log("Token验证成功", "info")
+            return True
+        
+        elif respose.status_code == 401:
+            log("Token验证失败", "warn")
+
+        else:
+            log(f"Token异常，原因{respose.status_code}", "warn")
+        
+        return False
+
+    except requests.exceptions.RequestException as e:
+        log(f"网络连接异常：{str(e)}", "warn")
+        return False
+
+def get_remote_files_recursive(headers, path="resource"):
     """递归获取远程文件信息（处理分页）"""
     files = []
     url = f"{GITHUB_REPO_API}{path}?ref=dev"
@@ -67,7 +98,7 @@ def get_remote_files_recursive(path="resource"):
             
             for item in response.json():
                 if item["type"] == "dir":
-                    files += get_remote_files_recursive(item["path"])
+                    files += get_remote_files_recursive(headers, item["path"])
                 elif item["type"] == "file":
                     if item["path"].startswith("resource/"):
                         relative_path = item["path"][len("resource/"):]
@@ -145,9 +176,21 @@ def safe_update():
     # 获取远程文件信息
     log("正在获取远程文件清单...", "info")
 
+    load_dotenv(dotenv_path="GITHUB_TOKEN.env")
+    token = os.environ.get("GITHUB_TOKEN")
+    
+    headers = {
+        # "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "GitHubAPIHelper/1.0"
+    }
+
+    if validate_github_token(token):
+        headers["Authorization"] = f"token {token}"
+
     # bef_tim = time.perf_counter()
     with Timer() as t:
-        remote_files = get_remote_files_recursive()
+        remote_files = get_remote_files_recursive(headers)
 
     log(f"消耗时间：{t.elapsed_s:.3f}s", "info")
 

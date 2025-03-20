@@ -1,0 +1,7 @@
+*.env
+*.log
+
+test.py
+
+/resource/
+/__pycache__/
