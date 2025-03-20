@@ -27,7 +27,8 @@ jobs:
       run: pyinstaller --onefile AutoUpdateResource.py
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: Executable
+        name: executable
         path: dist/AutoUpdateResource.exe
+        retention-days: 3
