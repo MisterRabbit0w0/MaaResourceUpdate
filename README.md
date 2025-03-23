@@ -4,9 +4,9 @@
 
 ## 安装与使用
 
-下载本项目源代码，~~或在 `releases` 中找封装的exe下载（todo）~~，解压至MAA主目录下
+下载本项目源代码，或在 `releases` 中找封装的exe下载，解压至MAA主目录下
 
-初次使用时，请运行 `AutoUpdateResourceInit.py` 以初始化 `reource/.manifest.json`
+初次使用时，请运行 `upgrade.exe` 以初始化 `reource/.manifest.json`
 
 本项目通过使用 Github Token 防止调用次数限制，请勿在同一时间多次运行程序
 
@@ -24,4 +24,12 @@ GITHUB_TOKEN={your_github_token_here}
 
 ## 随MAA运行
 
-在 MAA/设置/运行设置/开始前脚本中设置 `"C:/Program Files/Python313/python.exe"(替换为你的python位置) e:/MAA-v5.6.2-win-x64/AutoUpdateResource.py`
+在 MAA/设置/运行设置/开始前脚本中输入 `"C:/Program Files/Python313/python.exe"(替换为你的python位置) AutoUpdateResource.py` 或 `AUMR.exe`
+
+## TODO
+
+- [] 调用系统对话框输入 token 而非去创建文件
+
+- [] 加入 api 调用速率限制
+
+- [] 加入无 token 或 调用 git 方法

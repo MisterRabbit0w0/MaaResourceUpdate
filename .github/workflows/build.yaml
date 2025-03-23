@@ -2,7 +2,7 @@ name: Build Executable
 
 on:
   push:
-    branchs: [ dev ]
+    branchs: [ main ]
 
 jobs:
   build:
@@ -24,11 +24,17 @@ jobs:
         pip install -r requirements.txt
 
     - name: Build Executable
-      run: pyinstaller --onefile AutoUpdateResource.py
+      run: |
+        pyinstaller --onefile AutoUpdateResource.py -n AUMR.exe
+        pyinstaller --onefile AutoUpdateResourceInit.py -n init.exe
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: executable
-        path: dist/AutoUpdateResource.exe
+        path: dist/AUMR.exe
+        retention-days: 3
+      with:
+        name: executable
+        path: dist/init.exe
         retention-days: 3
