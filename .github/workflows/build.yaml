@@ -2,7 +2,7 @@ name: Build Executable
 
 on:
   push:
-    branchs: [ dev ]
+    branchs: [ main ]
 
 jobs:
   build:
