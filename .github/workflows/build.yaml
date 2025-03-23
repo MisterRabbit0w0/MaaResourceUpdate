@@ -32,9 +32,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: executable
-        path: dist/AUMR.exe
-        retention-days: 3
-      with:
-        name: executable
-        path: dist/init.exe
+        path: |
+          dist/AUMR.exe
+          dist/init.exe
         retention-days: 3
