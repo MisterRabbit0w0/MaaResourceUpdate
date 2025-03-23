@@ -67,7 +67,7 @@ def validate_github_token(token):
     # 验证 token 是否有效
     
     if not token:
-        log("没有有效token", "warn")
+        log("没有有效token，访问可能受到限制", "warn")
         return False
         
     headers = {
