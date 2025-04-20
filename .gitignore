@@ -1,7 +1,14 @@
 *.env
 *.log
 
-test.py
+/test.py
+/AutoUpdateResourceInit.py
+/AutoUpdateResource.py
 
 /resource/
 /__pycache__/
+/src/__pycache__/
+/src/core/__pycache__/
+
+/build/
+/dist/
