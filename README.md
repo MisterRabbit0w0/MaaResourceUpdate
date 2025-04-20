@@ -4,19 +4,39 @@
 
 ## 安装与使用
 
-下载本项目源代码，或在 `releases` 中找封装的exe下载，解压至MAA主目录下
-
-初次使用时，请运行 `upgrade.exe` 以初始化 `reource/.manifest.json`
-
-本项目通过使用 Github Token 防止调用次数限制，请勿在同一时间多次运行程序
-
-首次运行 `AutoUpdateResource.py` 前，请在同目录下创建 `GITHUB_TOKEN.env`，在文件中输入以下字段
+在一切开始之前，请在仓库根目录下创建 `GITHUB_TOKEN.env`，在文件中输入以下字段
 
 ```env
 GITHUB_TOKEN={your_github_token_here}
 ```
 
+### 编译
+
+请先检查电脑中是否存在 Python 3.11 及以上版本。
+
+下载项目源代码后，先运行
+
+```shell
+pip install -r requirements.txt
+```
+
 其中，{your_github_token_here} 填入你自己的 token
+
+随后每次启动时，请在仓库根目录下运行
+
+```shell
+python -m src.main
+```
+
+以执行更新命令
+
+### 直接使用
+
+在 Actions 最新的 workflow 找到 Artifacts 中的压缩包下载即可
+
+## 更新方式
+
+目前采用与仓库同步的方式，即直接获取仓库下所有文件信息并与本地比对，有差异则更新。
 
 ## Github TOKEN 获取
 
@@ -24,7 +44,7 @@ GITHUB_TOKEN={your_github_token_here}
 
 ## 随MAA运行
 
-在 MAA/设置/运行设置/开始前脚本中输入 `"C:/Program Files/Python313/python.exe"(替换为你的python位置) AutoUpdateResource.py` 或 `AUMR.exe`
+在 MAA/设置/运行设置/开始前脚本中输入 `python -m src.main` 或 `maaupdater.exe`
 
 ## TODO
 

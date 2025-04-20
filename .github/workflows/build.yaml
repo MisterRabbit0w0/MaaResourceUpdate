@@ -25,14 +25,12 @@ jobs:
 
     - name: Build Executable
       run: |
-        pyinstaller --onefile AutoUpdateResource.py -n AUMR.exe
-        pyinstaller --onefile AutoUpdateResourceInit.py -n init.exe
+        pyinstaller maaupdater.spec
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: executable
         path: |
-          dist/AUMR.exe
-          dist/init.exe
+          dist/maaupdater.exe
         retention-days: 3
