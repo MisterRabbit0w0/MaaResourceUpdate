@@ -33,7 +33,7 @@ class AutoUpdater:
             headers["Authorization"] = f"token {token}"
 
         with Timer() as t:
-            remote_files = self.github_api.get_remote_files_recursive(headers)
+            remote_files = self.github_api.get_remote_files_recursive(headers=headers)
 
         logger.log(f"消耗时间：{t.elapsed_s:.3f}s", "info")
 
@@ -57,6 +57,8 @@ class AutoUpdater:
             logger.log(f"更新完成！成功 {success}/{total}", "info")
         else:
             logger.log(f"更新异常！成功 {success}/{total}", "error")
+
+        ManifestHandler.generate
 
 def main():
     updater = AutoUpdater()
