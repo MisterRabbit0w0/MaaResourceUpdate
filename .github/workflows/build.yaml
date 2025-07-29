@@ -43,7 +43,6 @@ jobs:
         PyInstaller.__main__.run([
             '--onefile',
             '--name=github-sync',
-            '--add-data=.env;.',
             '--hidden-import=aiohttp',
             '--hidden-import=aiofiles',
             '--hidden-import=dotenv',
