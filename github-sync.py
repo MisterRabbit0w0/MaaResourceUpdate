@@ -83,14 +83,18 @@ class GitHubFolderSync:
             return None
         
         try:
-            sha1 = hashlib.sha1()
-            with open(file_path, 'rb') as f:
-                for chunk in iter(lambda: f.read(4096), b""):
-                    sha1.update(chunk)
-            return sha1.hexdigest()
+            with open(file_path, "rb") as f:
+                content = f.read()
+            
+            # 构造 git blob 对象
+            header = f"blob {len(content)}\0".encode()
+            git_object = header + content
+
+            sha = hashlib.sha1(git_object).hexdigest()
+            return sha
+        
         except Exception as e:
-            logger.error(f"计算文件哈希失败 {file_path}: {e}")
-            return None
+            raise Exception(f"计算 {file_path} 哈希失败：{str(e)}")
     
     async def get_file_content(self, session: aiohttp.ClientSession, path: str) -> Optional[str]:
         """获取文件内容"""
@@ -176,6 +180,7 @@ class GitHubFolderSync:
             return True
         
         # 检查缓存中的SHA值
+        # git 的 sha 值计算逻辑不太一样
         cached_info = cache.get(file_path, {})
         cached_sha = cached_info.get("sha")
         
@@ -236,19 +241,61 @@ class GitHubFolderSync:
     
     async def collect_all_remote_files(self, session: aiohttp.ClientSession, 
                                      remote_path: str) -> Dict[str, Dict]:
-        """收集所有远程文件信息"""
+        """收集所有远程文件信息（带进度显示和并发优化）"""
         all_files = {}
+        pending_dirs = [remote_path]
+        processed_dirs = 0
+        total_dirs = 1
         
-        async def collect_recursive(path: str):
-            contents = await self.get_directory_contents(session, path)
+        # 使用信号量限制并发请求数
+        semaphore = asyncio.Semaphore(8)
+        
+        async def collect_directory_with_progress(path: str):
+            nonlocal processed_dirs, total_dirs
             
-            for item in contents:
-                if item["type"] == "file":
-                    all_files[item["path"]] = item
-                elif item["type"] == "dir":
-                    await collect_recursive(item["path"])
+            async with semaphore:
+                try:
+                    contents = await self.get_directory_contents(session, path)
+                    processed_dirs += 1
+                    
+                    files_in_dir = 0
+                    dirs_in_dir = 0
+                    
+                    for item in contents:
+                        if item["type"] == "file":
+                            all_files[item["path"]] = item
+                            files_in_dir += 1
+                        elif item["type"] == "dir":
+                            pending_dirs.append(item["path"])
+                            dirs_in_dir += 1
+                    
+                    total_dirs += dirs_in_dir
+                    
+                    # 动态进度显示
+                    progress = (processed_dirs / total_dirs) * 100
+                    logger.info(f"扫描进度: {processed_dirs}/{total_dirs} 目录 ({progress:.1f}%) | "
+                              f"当前目录: {path.split('/')[-1]} ({files_in_dir}文件, {dirs_in_dir}子目录)")
+                    
+                except Exception as e:
+                    logger.error(f"扫描目录失败 {path}: {e}")
+                    processed_dirs += 1
         
-        await collect_recursive(remote_path)
+        # 批量并发处理
+        batch_size = 5  # 每批处理的目录数
+        
+        while pending_dirs:
+            # 取出当前批次的目录
+            current_batch = pending_dirs[:batch_size]
+            pending_dirs = pending_dirs[batch_size:]
+            
+            if not current_batch:
+                break
+            
+            # 并发处理当前批次
+            tasks = [collect_directory_with_progress(path) for path in current_batch]
+            await asyncio.gather(*tasks, return_exceptions=True)
+        
+        logger.info(f"扫描完成! 共找到 {len(all_files)} 个文件，扫描了 {processed_dirs} 个目录")
         return all_files
     
     async def cleanup_deleted_files(self, remote_files: Dict[str, Dict], cache: Dict):
@@ -465,10 +512,11 @@ def main():
         return
     
     # 设置本地存储路径
-    local_path = input("请输入本地存储路径 (默认: ./resource): ").strip()
-    if not local_path:
-        local_path = "./resource"
-    
+    # local_path = input("请输入本地存储路径 (默认: ./resource): ").strip()
+    # if not local_path:
+        # local_path = "./resource"
+    local_path = "./resource"
+
     # 创建同步器并运行
     syncer = GitHubFolderSync(token, local_path)
     
